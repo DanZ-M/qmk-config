@@ -1,0 +1,73 @@
+name: Build QMK firmware
+
+on: [push, workflow_dispatch]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    container: qmkfm/qmk_cli
+
+    strategy:
+
+      fail-fast: false
+
+    steps:
+
+    - name: Checkout QMK
+
+      uses: actions/checkout@v3
+
+      with:
+
+        repository: sadekbaroudi/qmk_firmware
+
+        ref: develop_fingerpunch
+
+        submodules: true
+
+    
+
+    - name: Checkout keymap
+
+      uses: actions/checkout@v3
+
+      with:
+
+        path: keyboards/fingerpunch/ffkb/byomcu/v3/keymaps/${{ github.actor }}
+
+    - name: Checkout Case Modes
+
+      uses: actions/checkout@v3
+
+      with:
+
+        repository: andrewjrae/kyria-keymap
+
+        path: keyboards/splitkb/kyria/keymaps/andrewjrae
+
+    - name: Build firmware
+
+      run: make fingerpunch/ffkb/byomcu/v3:${{ github.actor }} FP_TRACKBALL_ENABLE=yes CONVERT_TO=stemcell
+
+    - name: Archive firmware
+
+      uses: actions/upload-artifact@v3
+
+      with:
+
+        name: ffkb_v3_${{ github.actor }}
+
+        retention-days: 2
+
+        path: |
+
+          *.hex
+
+          *.bin
+
+          *.uf2
+
+      continue-on-error: true
